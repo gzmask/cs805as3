@@ -2,7 +2,7 @@
 #include <cmath>
 
 //pixel iterator for img panel.
-ImagePanel foreach_pixel_exec(ImagePanel img, std::function<unsigned char(Ray, Point)> ray_func) {
+ImagePanel foreach_pixel_exec(ImagePanel img, std::function<unsigned char(Ray)> ray_func) {
   int i = 0;
   for (unsigned char& pixel: img) { //foreach pixel in empty_img
     //using to_2d function to get x,y camera coordinates
@@ -12,7 +12,7 @@ ImagePanel foreach_pixel_exec(ImagePanel img, std::function<unsigned char(Ray, P
     Ray ray = ray_construction(cam_xy[0], cam_xy[1]);
 
     //get shading value using the passed-in functor
-    pixel = ray_func(ray, LRP);
+    pixel = ray_func(ray);
     i++;
   }
   return img;
@@ -62,7 +62,7 @@ ImagePanel init_img_panel(ImagePanel img) {
 }
 
 //translate ray equation to an shading value
-unsigned char ray_tracing(Ray ray, Point LRP) {
+unsigned char ray_tracing(Ray ray) {
   Intersection p = ray_objects_intersection(ray);
   //std::cout<<"Intersection: x:"<<p.intersection[0]<<", y:"<<p.intersection[1]<<", z:"<<p.intersection[2]<<"kd: "<<p.kd<<std::endl;
   return shading(p, LRP); 
@@ -203,14 +203,34 @@ unsigned char shading(Intersection p, Point LRP) {
 //==========helper functions==========
 
 //read file to array
-void read_from_file(std::string filename) {
+CTVolume read_from_file(std::string filename) {
+  CTVolume ct;
+  FILE *infid;
 
+  //open file
+  if ((infid = fopen(filename.c_str(), "rb")) == NULL) {
+    std::cout<<"Open CT DATA File Error."<<std::endl;
+    return ct; 
+  }
+  std::cout<<"Sucessfully open CT DATA File."<<std::endl;
+
+  //read file
+  for (int i=0; i<VOL_Z; i++) { /* Read one slice at a time. */
+    int n = fread(&ct[to_1d(0,0,i)], sizeof(char), VOL_X*VOL_Y, infid);
+    if (n < VOL_X*VOL_Y*sizeof(char)) {
+      std::cout<<"Read CT data slice "<<i<<" error."<<std::endl;
+      return ct; 
+    }
+  }
+  std::cout<<"Sucessfully read CT DATA File."<<std::endl;
+  fclose(infid);
+  return ct; 
 }
 
 //save image panel to binary file
-void save_to_file(ImagePanel img) {
-  FILE * pFile;
-  pFile = fopen ( "output.raw" , "wb" );
+void save_to_file(ImagePanel img, std::string filename) {
+  FILE *pFile;
+  pFile = fopen ( filename.c_str(), "wb" );
   std::cout<<"img size written to output.raw: "<<img.size()<<std::endl;
   fwrite (img.data() , sizeof(int), img.size() , pFile );
   fclose (pFile);
@@ -573,12 +593,19 @@ int to_1d(int x, int y) {
     return -1;
   if (y >= IMG_Y || y < 0)
     return -1;
-  return (IMG_Y*y + x);
+  return (IMG_X*y + x);
 }
 
-//Translate 3D array index of slice/row/column to 1D index.
-//x is column, y is row, z is slice
+//Translate 3D array index to 1D index.
+//x is counting in column, y is counting in row, z is counting in slice
 int to_1d(int x, int y, int z) {
+  if (x >= VOL_X || x < 0)
+    return -1;
+  if (y >= VOL_Y || y < 0)
+    return -1;
+  if (z >= VOL_Z || z < 0)
+    return -1;
+  return (VOL_X*VOL_Y*z + VOL_X*y + x);
 }
 
 //Translate 1d array index to 2d
@@ -591,11 +618,30 @@ std::array<int, 2> to_2d(int x) {
   return {x_, y_};
 }
 
+std::array<int, 3> to_3d(int x) {
+  if (x>=(VOL_X*VOL_Y*VOL_Z) || x < 0) {
+    return {-1,-1, -1};
+  }
+  int z_ = x / (VOL_X*VOL_Y);
+  int y_ = (x % (VOL_X*VOL_Y)) / VOL_X;
+  int x_ = x % VOL_X;
+  return {x_, y_, z_};
+}
+
+//prints the ct volume
+void print_ct_volume(CTVolume ct) {
+  std::cout<<std::endl;
+  for (auto& voxel : ct) {
+    std::cout<<(int)voxel<<", ";
+  }
+  std::cout<<std::endl<<"Volume array size: "<<ct.size()<<std::endl;
+}
+
 //prints the img panel
 void print_img_panel(ImagePanel img) {
   std::cout<<std::endl;
   for (auto& pixel : img) {
-    std::cout<<pixel<<", ";
+    std::cout<<(int)pixel<<", ";
   }
 
   /* ascii art

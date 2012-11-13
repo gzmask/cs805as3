@@ -54,7 +54,6 @@ Matrix Mwl = get_T(LRP);
 Matrix Mlw = get_Ti(LRP);
 
 int main () {
-  /*
   //tests
   Point vrp = {6.0, 10.0, -5.0};
   Vector vpn = {-6.0, -9.0, 5.0}; 
@@ -129,16 +128,28 @@ int main () {
   std::cout<<mul(Mcw, b)[1]<<std::endl;
   std::cout<<mul(b, Mcw)[2]<<std::endl;
   std::cout<<mul(b, Mcw)[3]<<std::endl;
-  */
 
-  //main program
+  std::cout<<"to_1d, expected to be 165130:"<<to_1d(10, 10, 10)<<std::endl;
+  std::cout<<"to_1d, expected to be -1:"<<to_1d(200, 10, 10)<<std::endl;
+  std::cout<<"to_1d, expected to be -1:"<<to_1d(10, 200, 10)<<std::endl;
+  std::cout<<"to_1d, expected to be -1:"<<to_1d(10, 10, 200)<<std::endl;
+  std::cout<<"to_3d, expected to be 10,10,10:"<<to_3d(165130)[0]<<to_3d(165130)[1]<<to_3d(165130)[2]<<std::endl;
+  std::cout<<"to_3d, expected to be 127,127,127:"<<to_3d(2097151)[0]<<to_3d(2097151)[1]<<to_3d(2097151)[2]<<std::endl;
+  std::cout<<"to_3d, expected to be -1,-1,-1:"<<to_3d(2097153)[0]<<to_3d(2097153)[1]<<to_3d(2097153)[2]<<std::endl;
+  std::cout<<"to_3d, expected to be -1,-1,-1:"<<to_3d(2097153)[0]<<to_3d(2097153)[1]<<to_3d(2097153)[2]<<std::endl;
+  std::cout<<"volumn length: "<<VOL_LEN<<std::endl;
+
+
+  std::cout<<"read_from_file function: "<<std::endl;
+  CTVolume tmpct = read_from_file("smallHead.den");
+  //print_ct_volume(tmpct);
+
+  //main program for ray tracing
   ImagePanel img;
   img = init_img_panel(img);
   img = foreach_pixel_exec(img, ray_tracing);
   //print_img_panel(img);
-
-  //save result to binary file
-  save_to_file(img);
+  save_to_file(img, "output.raw"); //save result to binary file
 
   return 0;
 }

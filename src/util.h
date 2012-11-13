@@ -4,8 +4,11 @@
 //define preprocessing vars
 #define IMG_X 512
 #define IMG_Y 512
+#define VOL_X 128
+#define VOL_Y 128
+#define VOL_Z 128
+#define VOL_LEN ( VOL_X * VOL_Y * VOL_Z )
 #define IMG_LEN ( IMG_X * IMG_Y )
-/* definition of the image buffer */
 #define ROWS IMG_Y
 #define COLS IMG_X
 
@@ -18,6 +21,7 @@
 
 //types
 typedef std::array<unsigned char, IMG_LEN> ImagePanel;
+typedef std::array<unsigned char, VOL_LEN> CTVolume;
 typedef std::array<double, 3> Point;
 typedef std::array<double, 2> Point2D;
 typedef std::array<double, 3> Vector;
@@ -57,9 +61,10 @@ typedef struct {
 
 //functions
 POLY4_2D flatten(POLY4, Point);
-ImagePanel foreach_pixel_exec(ImagePanel, std::function<unsigned char(Ray, Point)>);
+ImagePanel foreach_pixel_exec(ImagePanel, std::function<unsigned char(Ray)>);
 ImagePanel init_img_panel(ImagePanel);
-unsigned char ray_tracing(Ray, Point);
+unsigned char ray_tracing(Ray);
+unsigned char volume_ray_tracing(Ray);
 Intersection ray_objects_intersection(Ray);
 unsigned char shading(Intersection, Point);
 Intersection ray_sphere_intersection(Ray, SPHERE);
@@ -80,7 +85,9 @@ Row mul(Matrix, Row);
 int to_1d(int, int);
 int to_1d(int, int, int);
 std::array<int, 2> to_2d(int);
+std::array<int, 3> to_3d(int);
 void print_img_panel(ImagePanel);
+void print_ct_volume(CTVolume);
 void pmatrix(std::string, Matrix);
 bool closer(Point, Point, Point);
 UVN get_uvn(Vector V1, Vector V2);
@@ -94,8 +101,8 @@ double get_length(Vector);
 Vector cross_product(Vector, Vector);
 double dot_product(Vector, Vector);
 Vector normalize(Vector);
-void save_to_file(ImagePanel);
-void read_from_file(std::string);
+void save_to_file(ImagePanel, std::string);
+CTVolume read_from_file(std::string);
 
 //global vars
 extern Matrix Mwc;
