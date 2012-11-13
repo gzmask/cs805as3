@@ -79,7 +79,6 @@ int main () {
   pmatrix("mcw:", mcw);
   pmatrix("tcw:", tcw);
   pmatrix("rcw:", rcw);
-
   pmatrix("Mcw:", Mcw);
 
   std::cout<<"to_1d function, expected to be 512:"<<std::endl;
