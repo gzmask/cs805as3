@@ -141,7 +141,7 @@ int main () {
 
   std::cout<<"read_from_file function: "<<std::endl;
   CTVolume tmpct = read_from_file("smallHead.den");
-  //print_ct_volume(tmpct);
+  print_ct_volume(tmpct);
 
   //main program for ray tracing
   ImagePanel img;
