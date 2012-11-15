@@ -4,13 +4,16 @@
 //define preprocessing vars
 #define IMG_X 512
 #define IMG_Y 512
-#define VOL_X 128
-#define VOL_Y 128
-#define VOL_Z 128
+#define SLCS 128
+#define ROWS 128
+#define COLS 128
+#define VOL_X COLS
+#define VOL_Y ROWS
+#define VOL_Z SLCS
 #define VOL_LEN ( VOL_X * VOL_Y * VOL_Z )
 #define IMG_LEN ( IMG_X * IMG_Y )
-#define ROWS IMG_Y
-#define COLS IMG_X
+//#define ROWS IMG_Y
+//#define COLS IMG_X
 
 #include <array>
 #include <functional>
@@ -63,13 +66,17 @@ typedef struct {
 POLY4_2D flatten(POLY4, Point);
 ImagePanel foreach_pixel_exec(ImagePanel, std::function<unsigned char(Ray)>);
 ImagePanel init_img_panel(ImagePanel);
-unsigned char ray_tracing(Ray);
-unsigned char volume_ray_tracing(Ray);
-Intersection ray_objects_intersection(Ray);
-unsigned char shading(Intersection, Point);
-Intersection ray_sphere_intersection(Ray, SPHERE);
-Intersection ray_polygon_intersection(Ray, POLY4);
+//unsigned char ray_tracing(Ray);
+//Intersection ray_objects_intersection(Ray);
+//unsigned char shading(Intersection, Point);
+//Intersection ray_sphere_intersection(Ray, SPHERE);
+//Intersection ray_polygon_intersection(Ray, POLY4);
 Ray ray_construction(int, int);
+
+//functions for assignment 3
+CTVolume compute_shading_volume(CTVolume);
+Intersection ray_box_intersection(Ray);
+unsigned char volume_ray_tracing(Ray);
 
 //helper functions
 bool inside_bounding(Point2D, Point2D, Point2D);

@@ -25,7 +25,6 @@ double ymin = -0.0175;
 double xmax = -0.0175;
 double ymax = 0.0175;
 
-
 /* definition of the camera parameters */
 //Point VRP = {1.0, 2.0, 3.5};
 //Vector VPN = {0.0, -1.0, -2.5};
@@ -53,7 +52,8 @@ Matrix Mwl = get_T(LRP);
 /* Transformation from the light to the world coordinates */
 Matrix Mlw = get_Ti(LRP);
 
-int main () {
+
+void unit_test() {
   //tests
   Point vrp = {6.0, 10.0, -5.0};
   Vector vpn = {-6.0, -9.0, 5.0}; 
@@ -138,17 +138,42 @@ int main () {
   std::cout<<"to_3d, expected to be -1,-1,-1:"<<to_3d(2097153)[0]<<to_3d(2097153)[1]<<to_3d(2097153)[2]<<std::endl;
   std::cout<<"volumn length: "<<VOL_LEN<<std::endl;
 
-
   std::cout<<"read_from_file function: "<<std::endl;
-  CTVolume tmpct = read_from_file("smallHead.den");
+  /*
+  CTVolume* tmpct;
+  tmpct = read_from_file("smallHead.den");
   print_ct_volume(tmpct);
+  delete tmpct;
+  */
+
+  return;
+}
+
+int main () {
+
+  unit_test();
 
   //main program for ray tracing
+  /*
   ImagePanel img;
   img = init_img_panel(img);
   img = foreach_pixel_exec(img, ray_tracing);
   //print_img_panel(img);
   save_to_file(img, "output.raw"); //save result to binary file
+  */
+
+  //main program for volume rendering
+  CTVolume ct = read_from_file("smallHead.den");
+  print_ct_volume(ct);
+  //CTVolume shaded_ct = compute_shading_volume(ct);
+  //print_ct_volume(shaded_ct);
+  ImagePanel img;
+  img = init_img_panel(img);
+  /*
+  img = foreach_pixel_exec(img, volume_ray_tracing);
+  */
+  save_to_file(img, "output.raw"); //save result to binary file
+
 
   return 0;
 }

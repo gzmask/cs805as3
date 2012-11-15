@@ -1,6 +1,12 @@
 #include "util.h"
 #include <cmath>
 
+//shading the ct volume
+CTVolume compute_shading_volume(CTVolume ct) {
+  CTVolume shaded_ct;
+  return shaded_ct;
+}
+
 //pixel iterator for img panel.
 ImagePanel foreach_pixel_exec(ImagePanel img, std::function<unsigned char(Ray)> ray_func) {
   int i = 0;
@@ -62,13 +68,16 @@ ImagePanel init_img_panel(ImagePanel img) {
 }
 
 //translate ray equation to an shading value
+/*
 unsigned char ray_tracing(Ray ray) {
   Intersection p = ray_objects_intersection(ray);
   //std::cout<<"Intersection: x:"<<p.intersection[0]<<", y:"<<p.intersection[1]<<", z:"<<p.intersection[2]<<"kd: "<<p.kd<<std::endl;
   return shading(p, LRP); 
 }
+*/
 
 //calculate the ray object intersection point
+/*
 Intersection ray_objects_intersection(Ray ray) {
   //this is hard-coded and ugly. should use a passed-in list structure instead in project
   auto sphere_hit = ray_sphere_intersection(ray, obj1);
@@ -87,7 +96,9 @@ Intersection ray_objects_intersection(Ray ray) {
     return polygon_hit; 
   }
 }
+*/
 
+/*
 Intersection ray_sphere_intersection(Ray ray, SPHERE obj) {
   //get A,B,C
   //A = Xd^2 + Yd^2 + Zd^2
@@ -138,7 +149,9 @@ Intersection ray_sphere_intersection(Ray ray, SPHERE obj) {
   Intersection result = { Ri, SN, obj.kd };
   return result;
 }
+*/
 
+/*
 Intersection ray_polygon_intersection(Ray ray, POLY4 obj) {
   Intersection null_ = {-1,-1,-1, -1,-1,-1, -1.0};
 
@@ -174,8 +187,10 @@ Intersection ray_polygon_intersection(Ray ray, POLY4 obj) {
   else
     return null_;
 }
+*/
 
 //calculate shading value from 0~255 accordingly to intersection info
+/*
 unsigned char shading(Intersection p, Point LRP) {
   //when p.kd < 0, then it is null. let us give null value a black color for now
   if (p.kd < 0) {
@@ -199,6 +214,7 @@ unsigned char shading(Intersection p, Point LRP) {
   else
     return (unsigned char)shading;
 }
+*/
 
 //==========helper functions==========
 
@@ -632,7 +648,7 @@ std::array<int, 3> to_3d(int x) {
 void print_ct_volume(CTVolume ct) {
   std::cout<<std::endl;
   for (auto& voxel : ct) {
-    std::cout<<(int)voxel<<", ";
+    if ((int)voxel!=9) std::cout<<(int)voxel<<", ";
   }
   std::cout<<std::endl<<"Volume array size: "<<ct.size()<<std::endl;
 }
