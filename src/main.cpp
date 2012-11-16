@@ -39,7 +39,7 @@ void unit_test() {
   for (auto vecotr : uvn) {//for each Vecotr in uvn
     for (auto num : vecotr) {//for each number in Vecotr
       std::cout<<num<<',';
-    }   
+    }
     std::cout<<std::endl;
   }
   
@@ -114,12 +114,12 @@ void unit_test() {
   std::cout<<"to_3d, expected to be -1,-1,-1:"<<to_3d(2097153)[0]<<to_3d(2097153)[1]<<to_3d(2097153)[2]<<std::endl;
   std::cout<<"volumn length: "<<VOL_LEN<<std::endl;
 
-  std::cout<<"read_from_file function: "<<std::endl;
-  Volume *tmpct = new Volume;
-  read_from_file("smallHead.den", tmpct);
-  //print_ct_volume(tmpct);
-  delete tmpct;
-
+  std::cout<<"add: "<<std::endl;
+  Point ori_ttt = {0,0,0};
+  Vector n_ttt = {1, 0, 0};
+  double dt_ttt = 20;
+  auto ttt = add(ori_ttt, n_ttt, dt_ttt);
+  std::cout<<" x: "<<ttt[0]<<" y: "<<ttt[1]<<" z: "<<ttt[2]<<std::endl;
   return;
 }
 
@@ -136,7 +136,7 @@ int main () {
   //print_ct_volume(color);
   ImagePanel* img = new ImagePanel;
   init_img_panel(img);
-  foreach_pixel_exec(img, volume_ray_tracing);
+  foreach_pixel_exec(img, volume_ray_tracing, ct, color);
   save_to_file(img, "output.raw"); //save result to binary file
   delete img;
   delete ct;

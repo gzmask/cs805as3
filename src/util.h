@@ -11,6 +11,7 @@
 #define IMG_LEN ( IMG_COLS * IMG_ROWS )
 
 #include <array>
+#include <vector>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -25,10 +26,13 @@ typedef std::array<double, 2> Point2D;
 typedef std::array<double, 3> Vector;
 typedef std::array<int, 4> Four_counter;
 typedef std::array<Vector, 3> UVN;
+typedef std::vector<Point> Intersection;
+/*
 typedef struct {
-	Point t0;	/* first intersection point */
-	Point t1;	/* second intersection point */
+	Point t0;
+	Point t1;
 } Intersection;
+*/
 typedef struct {
 	Point ref;	/* reference point, where the ray is from */
 	Vector direction;	/* ray direction */
@@ -58,20 +62,15 @@ typedef struct {
 
 //functions
 POLY4_2D flatten(POLY4, Point);
-void foreach_pixel_exec(ImagePanel*, std::function<unsigned char(Ray, Intersection)>);
+void foreach_pixel_exec(ImagePanel*, std::function<unsigned char(Ray, Intersection, Volume*, Volume*)>, Volume*, Volume*);
 void init_img_panel(ImagePanel*);
-//unsigned char ray_tracing(Ray);
-//Intersection ray_objects_intersection(Ray);
-//unsigned char shading(Intersection, Point);
-//Intersection ray_sphere_intersection(Ray, SPHERE);
-//Intersection ray_polygon_intersection(Ray, POLY4);
 Ray ray_construction(int, int);
-
-//functions for assignment 3
 void compute_shading_volume(Volume*, Volume*);
-Intersection ray_box_intersection(Ray);
-unsigned char volume_ray_tracing(Ray, Intersection);
+bool ray_box_intersection(Ray, Intersection*);
+unsigned char volume_ray_tracing(Ray, Intersection, Volume*, Volume*);
 void compute_shading_volume(Volume*);
+unsigned char tri_linear_interpolate(Volume*, Point);
+unsigned char linear_interpolate(unsigned char, unsigned char, double);
 
 //helper functions
 bool inside_bounding(Point2D, Point2D, Point2D);
@@ -105,6 +104,7 @@ Vector normalize(Vector);
 void save_to_file(ImagePanel*, std::string);
 void print_ct_volume(Volume*);
 void read_from_file(std::string, Volume*);
+Point add(Point, Vector, double);
 
 //global vars
 extern Matrix Mwc;

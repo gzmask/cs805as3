@@ -2,13 +2,128 @@
 #include <cmath>
 
 //
-Intersection ray_box_intersection(Ray) {
-  return {{0,0,0},{0,0,0}};
+bool ray_box_intersection(Ray ray, Intersection* intersection) {
+  double t,x,y,z;
+  int n = 0;
+
+  //x=0
+  t = -ray.ref[0]/ray.direction[0];
+  y = ray.ref[1] + ray.direction[1]*t;
+  z = ray.ref[2] + ray.direction[2]*t;
+  if (y >0 && y<ROWS && z>0 && z<SLCS) {
+    n++;
+    intersection->push_back( {0, y, z} );
+  }
+
+  //x=127
+  t = (127-ray.ref[0])/ray.direction[0];
+  y = ray.ref[1] + ray.direction[1]*t;
+  z = ray.ref[2] + ray.direction[2]*t;
+  if (y >0 && y<ROWS && z>0 && z<SLCS) {
+    n++;
+    intersection->push_back( {127, y, z} );
+  }
+  
+  //y=0
+  t = -ray.ref[1]/ray.direction[1];
+  x = ray.ref[0] + ray.direction[0]*t;
+  z = ray.ref[2] + ray.direction[2]*t;
+  if (x >0 && x<COLS && z>0 && z<SLCS) {
+    n++;
+    intersection->push_back( {x, 0, z} );
+  }
+
+  //y=127
+  t = (127-ray.ref[1])/ray.direction[1];
+  x = ray.ref[0] + ray.direction[0]*t;
+  z = ray.ref[2] + ray.direction[2]*t;
+  if (x >0 && x<COLS && z>0 && z<SLCS) {
+    n++;
+    intersection->push_back( {x, 127, z} );
+  }
+
+  //z=0
+  t = -ray.ref[2]/ray.direction[2];
+  x = ray.ref[0] + ray.direction[0]*t;
+  y = ray.ref[1] + ray.direction[1]*t;
+  if (x >0 && x<COLS && y>0 && y<ROWS) {
+    n++;
+    intersection->push_back( {x, y, 0} );
+  }
+
+  //z=127
+  t = (127-ray.ref[2])/ray.direction[2];
+  x = ray.ref[0] + ray.direction[0]*t;
+  y = ray.ref[1] + ray.direction[1]*t;
+  if (x >0 && x<COLS && y>0 && y<ROWS) {
+    n++;
+    intersection->push_back( {x, y, 127} );
+  }
+
+  if (n==2) {
+    if (closer((*intersection)[1], (*intersection)[0], VRP)) {
+      Point tp = (*intersection)[1];
+      (*intersection)[1] = (*intersection)[0];
+      (*intersection)[0] = tp;
+    }
+    return true;
+  } else {
+    return false;
+  }
 }
 
+
 //the ray tracing function
-unsigned char volume_ray_tracing(Ray ray, Intersection intersection) {
-  return 255;
+unsigned char volume_ray_tracing(Ray ray, Intersection intersection, Volume* ct, Volume* color) {
+  double Dt = 20.0; //the interval for sampling along the ray
+  double C = 0.0; //for accumulating the shading value
+  double T = 1.0; //for accumulating the transparency
+
+  //marching
+  for ( Point t = intersection[0];
+      closer(t, intersection[1], intersection[0]);
+      t = add(t, ray.direction, Dt) ) {
+    //std::cout<<" x: "<<t[0]<<" y: "<<t[1]<<" z: "<<t[2]<<std::endl;
+    auto a_i = (double)(tri_linear_interpolate(ct, t)/255.0);
+    auto c_i = tri_linear_interpolate(color, t);
+    C += (c_i * a_i);
+    T *= (1.0 - c_i);
+    if (T < 0)
+      break;
+  }
+
+  //std::cout<<(int)C<<std::endl;
+  return C;
+}
+
+//tri linear interpolation
+unsigned char tri_linear_interpolate(Volume* vol, Point p) {
+  int x = ceil(p[0]);
+  int x_ = floor(p[0]);
+  int y = ceil(p[1]);
+  int y_ = floor(p[1]);
+  int z = ceil(p[2]);
+  int z_ = floor(p[2]);
+  double px = p[0] - floor(p[0]);
+  double py = p[1] - floor(p[1]);
+  double pz = p[2] - floor(p[2]);
+
+  return linear_interpolate(
+    linear_interpolate(
+      linear_interpolate((*vol)[to_1d(x,y,z)], (*vol)[to_1d(x_,y,z)], px),
+      linear_interpolate((*vol)[to_1d(x,y_,z)], (*vol)[to_1d(x_,y_,z)], px),
+      py),
+    linear_interpolate(
+      linear_interpolate((*vol)[to_1d(x,y,z_)], (*vol)[to_1d(x_,y,z_)], px),
+      linear_interpolate((*vol)[to_1d(x,y_,z_)], (*vol)[to_1d(x_,y_,z_)], px),
+      py),
+    pz);
+}
+
+//linear interploation
+unsigned char linear_interpolate(unsigned char a, unsigned char b, double p) {
+  auto diff = b - a;
+  return (unsigned char)(a+diff*p);
 }
 
 //shading the ct volume
@@ -44,9 +159,8 @@ void compute_shading_volume(Volume* ct, Volume* color) {
 }
 
 //pixel iterator for img panel.
-void foreach_pixel_exec(ImagePanel* img, std::function<unsigned char(Ray, Intersection)> ray_func) {
-  int i = 0;
-  for (unsigned char& pixel: *img) { //foreach pixel in img
+void foreach_pixel_exec(ImagePanel* img, std::function<unsigned char(Ray, Intersection, Volume*, Volume*)> ray_func, Volume* ct, Volume* color) {
+  for (int i = 0; i < IMG_LEN; i++) { //for each pixel
     //using to_2d function to get x,y camera coordinates
     std::array<int, 2> cam_xy = to_2d(i);
 
@@ -54,11 +168,12 @@ void foreach_pixel_exec(ImagePanel* img, std::function<unsigned char(Ray, Inters
     Ray ray = ray_construction(cam_xy[0], cam_xy[1]);
 
     //get intersection
-    Intersection intersection = ray_box_intersection(ray);
-
-    //get shading value using the passed-in functor
-    pixel = ray_func(ray, intersection);
-    i++;
+    Intersection* intersection = new Intersection;
+    if (ray_box_intersection(ray, intersection)) {
+      //get shading value using the passed-in functor
+      (*img)[i] = ray_func(ray, *intersection, ct, color);
+    }
+    delete intersection;
   }
   return;
 }
@@ -82,18 +197,6 @@ Ray ray_construction(int x, int y) {
     p1[2] - p0[2]};
   Vector v0 = normalize(v0_);
 
-  /*
-  if ((x==0 ) || (x==511)) {
-    std::cout<<"img: x:"<<x<<", y:"<<y;
-    //std::cout<<"p0: x:"<<VRP[0]<<", y:"<<VRP[1]<<", z:"<<VRP[2]<<std::endl;
-    //std::cout<<"p0: x:"<<p0[0]<<", y:"<<p0[1]<<", z:"<<p0[2]<<std::endl;
-    std::cout<<"p1_: x:"<<p1_[0]<<", y:"<<p1_[1]<<", z:"<<p1_[2]<<"=====";
-    std::cout<<"p1: x:"<<p1[0]<<", y:"<<p1[1]<<", z:"<<p1[2]<<"=====";
-    std::cout<<"v0: x:"<<v0[0]<<", y:"<<v0[1]<<", z:"<<v0[2]<<"=====";
-    std::cout<<std::endl;
-  }
-  */
-
   return { p0[0], p0[1], p0[2],
            v0[0], v0[1], v0[2]};
 }
@@ -106,156 +209,13 @@ void init_img_panel(ImagePanel* img) {
   return;
 }
 
-//translate ray equation to an shading value
-/*
-unsigned char ray_tracing(Ray ray) {
-  Intersection p = ray_objects_intersection(ray);
-  //std::cout<<"Intersection: x:"<<p.intersection[0]<<", y:"<<p.intersection[1]<<", z:"<<p.intersection[2]<<"kd: "<<p.kd<<std::endl;
-  return shading(p, LRP); 
-}
-*/
-
-//calculate the ray object intersection point
-/*
-Intersection ray_objects_intersection(Ray ray) {
-  //this is hard-coded and ugly. should use a passed-in list structure instead in project
-  auto sphere_hit = ray_sphere_intersection(ray, obj1);
-  auto polygon_hit = ray_polygon_intersection(ray, obj2);
-  if (sphere_hit.kd < 0 && polygon_hit.kd < 0) {
-    return {-1,-1,-1,
-            -1,-1,-1,
-            -1.0};
-  } else if (polygon_hit.kd < 0) {
-    return sphere_hit; 
-  } else if (sphere_hit.kd < 0) {
-    return polygon_hit; 
-  } else if (closer(sphere_hit.intersection, polygon_hit.intersection, ray.ref)) {
-    return sphere_hit; 
-  } else {
-    return polygon_hit; 
-  }
-}
-*/
-
-/*
-Intersection ray_sphere_intersection(Ray ray, SPHERE obj) {
-  //get A,B,C
-  //A = Xd^2 + Yd^2 + Zd^2
-  double A = pow(ray.direction[0], 2) +
-             pow(ray.direction[1], 2) +
-             pow(ray.direction[2], 2);
-  //B = 2 * (Xd * (X0 - Xc) + Yd * (Y0 - Yc) + Zd * (Z0 - Zc))
-  double B = 2 * (ray.direction[0] * (ray.ref[0] - obj.x) +
-                  ray.direction[1] * (ray.ref[1] - obj.y) +
-                  ray.direction[2] * (ray.ref[2] - obj.z) );
-  //C = (X0 - Xc)^2 + (Y0 - Yc)^2 + (Z0 - Zc)^2 - Sr^2
-  double C = pow(ray.ref[0]-obj.x, 2) +
-             pow(ray.ref[1]-obj.y, 2) +
-             pow(ray.ref[2]-obj.z, 2) - 
-             pow(obj.radius, 2);
-
-  //get discriminant
-  double discriminant = pow(B,2) - 4*C;
-
-  //return null if discriminant is less than 0
-  Intersection null_ = {-1,-1,-1,
-                        -1,-1,-1,
-                        -1.0};
-  if (discriminant < 0)
-    return null_;
-
-  //compute t0 = (- B - (B^2 - 4*C)^1/2) / 2
-  double t0 = (-B - sqrt(discriminant)) / 2;
-  double t1 = (-B + sqrt(discriminant)) / 2;
-
-  //compute the intersection point Ri = [x0 + xd * ti ,  y0 + yd * ti,  z0 + zd * ti]
-  Point Ri;
-  if (discriminant > 0) {
-    Ri = {ray.ref[0] + ray.direction[0] * t0, 
-          ray.ref[1] + ray.direction[1] * t0, 
-          ray.ref[2] + ray.direction[2] * t0}; 
-  } else {
-    Ri = {ray.ref[0] + ray.direction[0] * t1, 
-          ray.ref[1] + ray.direction[1] * t1, 
-          ray.ref[2] + ray.direction[2] * t1}; 
-  }
-
-  //compute the surface normal SN = [(xi - xc)/Sr,   (yi - yc)/Sr,   (zi - zc)/Sr]
-  Vector SN = { (Ri[0]-obj.x)/obj.radius,
-                (Ri[1]-obj.y)/obj.radius,
-                (Ri[2]-obj.z)/obj.radius };
-
-  Intersection result = { Ri, SN, obj.kd };
-  return result;
-}
-*/
-
-/*
-Intersection ray_polygon_intersection(Ray ray, POLY4 obj) {
-  Intersection null_ = {-1,-1,-1, -1,-1,-1, -1.0};
-
-  //compute ray plane intersection
-  //first compute Pn · Rd = Vd 
-  double Vd = dot_product(obj.N, ray.direction);
-
-  //Vd = 0: ray is parallel to the plane
-  if (Vd == 0) 
-    return null_;
-
-  //Vd > 0: plane facing away from the ray
-  if (Vd > 0)
-    return null_;
-
-  //second compute V0 = -(Pn· R0 + D)
-  double V0 = - (dot_product(obj.N, ray.ref) + get_D_poly4(obj));
-
-  double t = V0/Vd;
-
-  //If t < 0 then the ray intersects plane at the negative side of the ray
-  if (t<0) 
-    return null_;
-
-  //compute intersection point: Pi = [Xi Yi Zi] = [X0 + Xd * t Y0 + Yd * t Z0 + Zd * t]
-  Point Pi = { ray.ref[0] + ray.direction[0]*t, 
-               ray.ref[1] + ray.direction[1]*t,
-               ray.ref[2] + ray.direction[2]*t };
-
-  //check if intersection point is inside the polygon
-  if (in_poly4(Pi, obj))
-    return { Pi, obj.N, obj.kd };
-  else
-    return null_;
-}
-*/
-
-//calculate shading value from 0~255 accordingly to intersection info
-/*
-unsigned char shading(Intersection p, Point LRP) {
-  //when p.kd < 0, then it is null. let us give null value a black color for now
-  if (p.kd < 0) {
-    return 0;
-  }
-
-  //calculate the light vector
-  Vector light = { LRP[0] - p.intersection[0],
-                   LRP[1] - p.intersection[1],
-                   LRP[2] - p.intersection[2] };
-
-  //normalize light vector;
-  light = normalize(light);
-
-  //calculate shading value
-  int shading = (int)Ip*p.kd*dot_product(p.normal, light);
-  if (shading < 0) // the light is not reaching the surface but to the backside
-    return 0;
-  else if (shading > 255) // ensure the shading value is within the bounds
-    return 255;
-  else
-    return (unsigned char)shading;
-}
-*/
-
 //==========helper functions==========
+
+//stepping a point on some direction
+Point add(Point t, Vector N, double Dt) {
+  Vector N_ = {N[0]*Dt, N[1]*Dt, N[2]*Dt};
+  return {t[0]+N_[0], t[1]+N_[1], t[2]+N_[2]};
+}
 
 //read file to array
 void read_from_file(std::string filename, Volume* ct) {
