@@ -477,19 +477,6 @@ int find_max(double x, double y, double z) {
   }
 }
 
-//prints a matrix
-void pmatrix(std::string str, Matrix m) {
-  std::cout<<str<<std::endl;
-  for (auto row : m) {
-    for (auto num : row) {
-      std::cout<<std::setw (10);
-      std::cout<<num;
-    }
-    std::cout<<std::endl;
-  }
-  std::cout<<std::endl;
-}
-
 //get transformation matrix
 Matrix get_T(Point vrp) {
   Row r1 = {1, 0, 0, -vrp[0]};

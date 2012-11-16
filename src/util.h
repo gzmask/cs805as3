@@ -88,7 +88,6 @@ int to_1d(int, int, int);
 std::array<int, 2> to_2d(int);
 std::array<int, 3> to_3d(int);
 void print_img_panel(ImagePanel);
-void pmatrix(std::string, Matrix);
 bool closer(Point, Point, Point);
 UVN get_uvn(Vector V1, Vector V2);
 Matrix get_T(Point);

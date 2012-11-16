@@ -1,0 +1,15 @@
+This is Assignment 3 for CS 805
+
+The source code is inside 'src' folder
+  typedefs, function declarations and global variable declarations are in util.h
+  Global variable assignments are in main.cpp
+  Function implementations are in util.cpp
+  Main program is the int main() function in main.cpp
+
+The final rendering results are inside 'render' folder
+
+The compile script is the compile.sh
+
+The picture format converting script is the extract.sh
+
+The binary executable is in 'bin' folder
