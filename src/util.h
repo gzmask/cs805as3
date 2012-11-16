@@ -2,18 +2,13 @@
 #define UTIL_H
 
 //define preprocessing vars
-#define IMG_X 512
-#define IMG_Y 512
-#define SLCS 128
-#define ROWS 128
-#define COLS 128
-#define VOL_X COLS
-#define VOL_Y ROWS
-#define VOL_Z SLCS
-#define VOL_LEN ( VOL_X * VOL_Y * VOL_Z )
-#define IMG_LEN ( IMG_X * IMG_Y )
-//#define ROWS IMG_Y
-//#define COLS IMG_X
+#define IMG_COLS 512
+#define IMG_ROWS 512
+#define COLS 128 //X
+#define ROWS 128 //Y
+#define SLCS 128 //Z
+#define VOL_LEN ( COLS * ROWS * SLCS )
+#define IMG_LEN ( IMG_COLS * IMG_ROWS )
 
 #include <array>
 #include <functional>
@@ -24,7 +19,7 @@
 
 //types
 typedef std::array<unsigned char, IMG_LEN> ImagePanel;
-typedef std::array<unsigned char, VOL_LEN> CTVolume;
+typedef std::array<unsigned char, VOL_LEN> Volume;
 typedef std::array<double, 3> Point;
 typedef std::array<double, 2> Point2D;
 typedef std::array<double, 3> Vector;
@@ -73,10 +68,10 @@ void init_img_panel(ImagePanel*);
 Ray ray_construction(int, int);
 
 //functions for assignment 3
-void compute_shading_volume(CTVolume*);
+void compute_shading_volume(Volume*, Volume*);
 Intersection ray_box_intersection(Ray);
 unsigned char volume_ray_tracing(Ray, Intersection);
-void compute_shading_volume(CTVolume*);
+void compute_shading_volume(Volume*);
 
 //helper functions
 bool inside_bounding(Point2D, Point2D, Point2D);
@@ -108,10 +103,8 @@ Vector cross_product(Vector, Vector);
 double dot_product(Vector, Vector);
 Vector normalize(Vector);
 void save_to_file(ImagePanel*, std::string);
-
-//helper functions for assignment 3
-void print_ct_volume(CTVolume*);
-void read_from_file(std::string, CTVolume*);
+void print_ct_volume(Volume*);
+void read_from_file(std::string, Volume*);
 
 //global vars
 extern Matrix Mwc;
@@ -120,8 +113,6 @@ extern Matrix Twc;
 extern Matrix Mcw;
 extern Matrix Rcw;
 extern Matrix Tcw;
-extern Matrix Mwl;
-extern Matrix Mlw;
 extern double xmin;
 extern double ymin;
 extern double xmax;
@@ -130,8 +121,6 @@ extern Point VRP;
 extern Vector VPN;
 extern Vector VUP;
 extern double focal;
-extern Point LRP;
+extern Vector Light;
 extern double Ip;
-extern SPHERE obj1;
-extern POLY4 obj2;
 #endif
