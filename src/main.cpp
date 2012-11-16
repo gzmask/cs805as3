@@ -52,7 +52,6 @@ Matrix Mwl = get_T(LRP);
 /* Transformation from the light to the world coordinates */
 Matrix Mlw = get_Ti(LRP);
 
-
 void unit_test() {
   //tests
   Point vrp = {6.0, 10.0, -5.0};
@@ -139,12 +138,10 @@ void unit_test() {
   std::cout<<"volumn length: "<<VOL_LEN<<std::endl;
 
   std::cout<<"read_from_file function: "<<std::endl;
-  /*
-  CTVolume* tmpct;
-  tmpct = read_from_file("smallHead.den");
-  print_ct_volume(tmpct);
+  CTVolume *tmpct = new CTVolume;
+  read_from_file("smallHead.den", tmpct);
+  //print_ct_volume(tmpct);
   delete tmpct;
-  */
 
   return;
 }
@@ -163,17 +160,17 @@ int main () {
   */
 
   //main program for volume rendering
-  CTVolume ct = read_from_file("smallHead.den");
+  CTVolume* ct = new CTVolume;
+  read_from_file("smallHead.den", ct);
   print_ct_volume(ct);
-  //CTVolume shaded_ct = compute_shading_volume(ct);
-  //print_ct_volume(shaded_ct);
-  ImagePanel img;
-  img = init_img_panel(img);
-  /*
-  img = foreach_pixel_exec(img, volume_ray_tracing);
-  */
+  compute_shading_volume(ct);
+  print_ct_volume(ct);
+  ImagePanel* img = new ImagePanel;
+  init_img_panel(img);
+  foreach_pixel_exec(img, volume_ray_tracing);
   save_to_file(img, "output.raw"); //save result to binary file
-
+  delete img;
+  delete ct;
 
   return 0;
 }

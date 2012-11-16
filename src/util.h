@@ -31,9 +31,8 @@ typedef std::array<double, 3> Vector;
 typedef std::array<int, 4> Four_counter;
 typedef std::array<Vector, 3> UVN;
 typedef struct {
-	Point intersection;	/* intersection point */
-	Vector normal;	/* intersection polygon normal vector */
-	double kd;	/* diffuse reflection coefficient of the surface */
+	Point t0;	/* first intersection point */
+	Point t1;	/* second intersection point */
 } Intersection;
 typedef struct {
 	Point ref;	/* reference point, where the ray is from */
@@ -64,8 +63,8 @@ typedef struct {
 
 //functions
 POLY4_2D flatten(POLY4, Point);
-ImagePanel foreach_pixel_exec(ImagePanel, std::function<unsigned char(Ray)>);
-ImagePanel init_img_panel(ImagePanel);
+void foreach_pixel_exec(ImagePanel*, std::function<unsigned char(Ray, Intersection)>);
+void init_img_panel(ImagePanel*);
 //unsigned char ray_tracing(Ray);
 //Intersection ray_objects_intersection(Ray);
 //unsigned char shading(Intersection, Point);
@@ -74,9 +73,10 @@ ImagePanel init_img_panel(ImagePanel);
 Ray ray_construction(int, int);
 
 //functions for assignment 3
-CTVolume compute_shading_volume(CTVolume);
+void compute_shading_volume(CTVolume*);
 Intersection ray_box_intersection(Ray);
-unsigned char volume_ray_tracing(Ray);
+unsigned char volume_ray_tracing(Ray, Intersection);
+void compute_shading_volume(CTVolume*);
 
 //helper functions
 bool inside_bounding(Point2D, Point2D, Point2D);
@@ -94,7 +94,6 @@ int to_1d(int, int, int);
 std::array<int, 2> to_2d(int);
 std::array<int, 3> to_3d(int);
 void print_img_panel(ImagePanel);
-void print_ct_volume(CTVolume);
 void pmatrix(std::string, Matrix);
 bool closer(Point, Point, Point);
 UVN get_uvn(Vector V1, Vector V2);
@@ -108,8 +107,11 @@ double get_length(Vector);
 Vector cross_product(Vector, Vector);
 double dot_product(Vector, Vector);
 Vector normalize(Vector);
-void save_to_file(ImagePanel, std::string);
-CTVolume read_from_file(std::string);
+void save_to_file(ImagePanel*, std::string);
+
+//helper functions for assignment 3
+void print_ct_volume(CTVolume*);
+void read_from_file(std::string, CTVolume*);
 
 //global vars
 extern Matrix Mwc;
